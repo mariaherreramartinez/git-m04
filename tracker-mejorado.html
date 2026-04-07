@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEMPHIS TIME TRACKER 8-BIT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&family=Rubik+Mono+One&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --neon-pink: #ff7eb9;
+            --cyan: #00f0ff;
+            --sun-yellow: #ffde00;
+            --black: #000000;
+            --white: #ffffff;
+            --border-thick: 5px solid var(--black);
+            --shadow: 8px 8px 0px var(--black);
+        }
+
+        /* Patrón Memphis Bacterio */
+        body {
+            background-color: var(--white);
+            background-image: radial-gradient(var(--black) 15%, transparent 16%);
+            background-size: 20px 20px;
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: var(--black);
+            overflow-x: hidden;
+        }
+
+        /* Header con Zig-Zag */
+        header {
+            background: var(--sun-yellow);
+            border: var(--border-thick);
+            padding: 40px 20px;
+            position: relative;
+            margin-bottom: 50px;
+            box-shadow: var(--shadow);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 90%, 95% 100%, 90% 90%, 85% 100%, 80% 90%, 75% 100%, 70% 90%, 65% 100%, 60% 90%, 55% 100%, 50% 90%, 45% 100%, 40% 90%, 35% 100%, 30% 90%, 25% 100%, 20% 90%, 15% 100%, 10% 90%, 5% 100%, 0% 90%);
+        }
+
+        h1 {
+            font-family: 'Rubik Mono One', sans-serif;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 4px 4px 0px var(--cyan);
+        }
+
+        /* Formas Flotantes Animadas */
+        .shape {
+            position: absolute;
+            z-index: -1;
+            animation: float 6s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--white);
+            border: var(--border-thick);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        /* Estilos de Formulario y Botones */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 3px solid var(--black);
+            font-family: 'Rubik', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+            font-family: 'Rubik Mono One', sans-serif;
+            padding: 12px 20px;
+            border: 3px solid var(--black);
+            box-shadow: 4px 4px 0px var(--black);
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--black); }
+
+        .btn-pink { background: var(--neon-pink); }
+        .btn-cyan { background: var(--cyan); }
+        .btn-yellow { background: var(--sun-yellow); }
+
+        /* Timer Activo */
+        .timer-display {
+            font-size: 3rem;
+            font-family: 'Rubik Mono One';
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border: 3px dashed var(--black);
+        }
+
+        .timer-active {
+            animation: neon-glow 1s infinite alternate, vibrate 0.1s infinite;
+        }
+
+        @keyframes neon-glow {
+            from { box-shadow: 0 0 10px var(--neon-pink), 8px 8px 0 var(--black); }
+            to { box-shadow: 0 0 20px var(--cyan), 8px 8px 0 var(--black); }
+        }
+
+        @keyframes vibrate {
+            0% { transform: translate(0); }
+            50% { transform: translate(1px, 1px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Lista de Proyectos */
+        .project-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 3px solid var(--black);
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 25px;
+            border: 3px solid var(--black);
+            background: #eee;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--cyan);
+            transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Export Area */
+        #report-section { margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="shape" style="top:10px; right:10%; width:50px; height:50px; background:var(--neon-pink); border-radius:50%; border:3px solid #000;"></div>
+        <h1>Time Tracker Neo-Memphis</h1>
+        <p>Control de tiempo con actitud radical</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2 style="font-family:'Rubik Mono One'">+ Nuevo Proyecto</h2>
+            <div class="input-group">
+                <label>Nombre</label>
+                <input type="text" id="proj-name" placeholder="Ej: Rediseño Web">
+            </div>
+            <div class="input-group">
+                <label>Meta Diaria (Horas)</label>
+                <input type="number" id="proj-goal" value="2" step="0.5">
+            </div>
+            <div class="input-group">
+                <label>Color</label>
+                <input type="color" id="proj-color" value="#00f0ff">
+            </div>
+            <button class="btn-pink" onclick="app.addProject()">Crear Proyecto</button>
+            
+            <hr style="border: 2px solid #000; margin: 30px 0;">
+
+            <h2 style="font-family:'Rubik Mono One'">Cronómetro</h2>
+            <div class="input-group">
+                <label>Seleccionar Proyecto</label>
+                <select id="active-project-select"></select>
+            </div>
+            <div id="timer-ui" class="timer-display">00:00:00</div>
+            <div style="display:flex; gap:10px;">
+                <button id="start-btn" class="btn-cyan" style="flex:1" onclick="app.toggleTimer()">Start</button>
+                <button class="btn-yellow" onclick="app.exportPDF()">PDF Report</button>
+            </div>
+        </div>
+
+        <div class="card" id="dashboard">
+            <h2 style="font-family:'Rubik Mono One'">Hoy</h2>
+            <div id="project-list">
+                </div>
+        </div>
+    </div>
+
+    <div id="report-template" style="display:none; padding: 40px; font-family: 'Rubik', sans-serif;">
+        <h1 style="border-bottom: 5px solid #000;">REPORTE SEMANAL</h1>
+        <div id="report-content"></div>
+    </div>
+
+    <script>
+        /**
+         * LÓGICA DE LA APLICACIÓN
+         */
+        const app = {
+            projects: JSON.parse(localStorage.getItem('m_projects')) || [],
+            logs: JSON.parse(localStorage.getItem('m_logs')) || [],
+            currentTimer: null,
+            activeProjectId: null,
+            audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+            dailyGoalReached: JSON.parse(localStorage.getItem('m_goals_today')) || {},
+
+            init() {
+                this.renderProjects();
+                this.updateUI();
+                setInterval(() => this.tick(), 1000);
+            },
+
+            save() {
+                localStorage.setItem('m_projects', JSON.stringify(this.projects));
+                localStorage.setItem('m_logs', JSON.stringify(this.logs));
+                localStorage.setItem('m_goals_today', JSON.stringify(this.dailyGoalReached));
+            },
+
+            addProject() {
+                const name = document.getElementById('proj-name').value;
+                const goal = parseFloat(document.getElementById('proj-goal').value);
+                const color = document.getElementById('proj-color').value;
+
+                if (!name) return alert("Ponle un nombre, ¡no seas tímido!");
+
+                const newProj = {
+                    id: Date.now(),
+                    name,
+                    goal,
+                    color
+                };
+
+                this.projects.push(newProj);
+                this.save();
+                this.renderProjects();
+                document.getElementById('proj-name').value = '';
+            },
+
+            renderProjects() {
+                const select = document.getElementById('active-project-select');
+                const list = document.getElementById('project-list');
+                
+                select.innerHTML = this.projects.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+                
+                const today = new Date().toISOString().split('T')[0];
+                list.innerHTML = this.projects.map(p => {
+                    const totalSecs = this.logs
+                        .filter(l => l.projectId == p.id && l.date === today)
+                        .reduce((acc, curr) => acc + curr.duration, 0);
+                    
+                    const hours = totalSecs / 3600;
+                    const percent = Math.min((hours / p.goal) * 100, 100).toFixed(0);
+
+                    // Check Goal Sound
+                    if (percent >= 100 && !this.dailyGoalReached[p.id + today]) {
+                        this.playArcadeSound();
+                        this.dailyGoalReached[p.id + today] = true;
+                        this.save();
+                    }
+
+                    return `
+                        <div class="project-item">
+                            <div style="width:100%">
+                                <strong>${p.name}</strong> (${hours.toFixed(2)}h / ${p.goal}h)
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percent}%; background: ${p.color}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            toggleTimer() {
+                if (this.currentTimer) {
+                    // Parar
+                    const duration = Math.floor((Date.now() - this.startTime) / 1000);
+                    if (duration > 0) {
+                        this.logs.push({
+                            projectId: this.activeProjectId,
+                            duration: duration,
+                            date: new Date().toISOString().split('T')[0],
+                            timestamp: Date.now()
+                        });
+                    }
+                    this.currentTimer = null;
+                    this.activeProjectId = null;
+                    document.getElementById('timer-ui').classList.remove('timer-active');
+                    document.getElementById('start-btn').innerText = "Start";
+                    document.getElementById('start-btn').className = "btn-cyan";
+                    this.save();
+                    this.renderProjects();
+                } else {
+                    // Iniciar
+                    if (this.projects.length === 0) return alert("Crea un proyecto primero");
+                    this.activeProjectId = document.getElementById('active-project-select').value;
+                    this.startTime = Date.now();
+                    this.currentTimer = true;
+                    document.getElementById('timer-ui').classList.add('timer-active');
+                    document.getElementById('start-btn').innerText = "Stop";
+                    document.getElementById('start-btn').className = "btn-pink";
+                }
+            },
+
+            tick() {
+                if (!this.currentTimer) {
+                    document.getElementById('timer-ui').innerText = "00:00:00";
+                    return;
+                }
+                const diff = Math.floor((Date.now() - this.startTime) / 1000);
+                const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+                const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                document.getElementById('timer-ui').innerText = `${h}:${m}:${s}`;
+            },
+
+            playArcadeSound() {
+                const ctx = this.audioCtx;
+                const playNote = (freq, start, duration) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, start);
+                    gain.gain.setValueAtTime(0.1, start);
+                    gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(start);
+                    osc.stop(start + duration);
+                };
+
+                const now = ctx.currentTime;
+                playNote(261.63, now, 0.1); // C4
+                playNote(329.63, now + 0.1, 0.1); // E4
+                playNote(392.00, now + 0.2, 0.1); // G4
+                playNote(523.25, now + 0.3, 0.3); // C5
+            },
+
+            exportPDF() {
+                const reportDiv = document.getElementById('report-template');
+                const content = document.getElementById('report-content');
+                
+                // Lógica de agrupación con Map()
+                const weeklyStats = new Map();
+                const last7Days = [...Array(7)].map((_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    return d.toISOString().split('T')[0];
+                });
+
+                last7Days.forEach(date => {
+                    const dayLogs = this.logs.filter(l => l.date === date);
+                    const totals = dayLogs.reduce((acc, curr) => {
+                        acc.set(curr.projectId, (acc.get(curr.projectId) || 0) + curr.duration);
+                        return acc;
+                    }, new Map());
+                    weeklyStats.set(date, totals);
+                });
+
+                let html = "";
+                weeklyStats.forEach((projectsMap, date) => {
+                    html += `<h3>Fecha: ${date}</h3><ul>`;
+                    projectsMap.forEach((duration, pid) => {
+                        const pName = this.projects.find(p => p.id == pid)?.name || 'Proyecto Borrado';
+                        html += `<li>${pName}: ${(duration/3600).toFixed(2)} horas</li>`;
+                    });
+                    if (projectsMap.size === 0) html += "<li>Sin actividad</li>";
+                    html += "</ul>";
+                });
+
+                content.innerHTML = html;
+                reportDiv.style.display = "block";
+
+                const opt = {
+                    margin: 1,
+                    filename: 'Reporte_Memphis_Time.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(reportDiv).save().then(() => {
+                    reportDiv.style.display = "none";
+                });
+            },
+
+            updateUI() {
+                this.renderProjects();
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
